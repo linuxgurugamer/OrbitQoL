@@ -26,11 +26,17 @@ namespace OrbitQoLInjector
             switch (__instance.patch.patchEndTransition)
             {
                 case Orbit.PatchTransitionType.ENCOUNTER:
+                    double encounterUT = __instance.patch.UTsoi;
                     Orbit nextPatch = __instance.patch.nextPatch;
-                    cData.captionLine2 = "Rel-V: " + nextPatch.getOrbitalSpeedAt(nextPatch.StartUT).ToString("0.##") + "m/s";
+                    Vector3d encounterVel = nextPatch.getOrbitalVelocityAtUT(encounterUT);
+                    cData.captionLine2 = "Rel-V: " + encounterVel.magnitude.ToString("0.##") + "m/s";
+                    cData.captionLine3 = "Encounter Angle: " + Vector3d.Angle(nextPatch.referenceBody.orbit.getOrbitalVelocityAtUT(encounterUT), encounterVel).ToString("0.##") + "°";
                     break;
                 case Orbit.PatchTransitionType.ESCAPE:
-                    cData.captionLine2 = "Exit-V: " + __instance.patch.getOrbitalSpeedAt(__instance.patch.EndUT).ToString("0.##") + "m/s";
+                    double escapeUT = __instance.patch.UTsoi;
+                    Vector3d escapeVel = __instance.patch.getOrbitalVelocityAtUT(escapeUT);
+                    cData.captionLine2 = "Exit-V: " + escapeVel.magnitude.ToString("0.##") + "m/s";
+                    cData.captionLine3 = "Ejection Angle: " + Vector3d.Angle(__instance.patch.referenceBody.orbit.getOrbitalVelocityAtUT(escapeUT), escapeVel).ToString("0.##") + "°";
                     break;
                 default:
                     break;
@@ -56,25 +62,13 @@ namespace OrbitQoLInjector
         {
             target = __instance.VesselTarget ?? null;
         }
+
         private static void Postfix(ref FlightGlobals __instance, ref bool fixedUpdate)
         {
-            if (__instance.VesselTarget == null && target != null)
+            if (__instance.VesselTarget == null && target != null &&
+                !(target.GetTransform() == null || (!target.GetActiveTargetable() && target.GetVessel() == __instance.activeVessel)))
             {
                 __instance.SetVesselTarget(target);
-                if (__instance.VesselTarget != null)
-                {
-                    if (__instance.VesselTarget.GetTransform() == null)
-                    {
-                        __instance.SetVesselTarget(null);
-                    }
-                    else if (!__instance.VesselTarget.GetActiveTargetable())
-                    {
-                        if (__instance.VesselTarget.GetVessel() == __instance.activeVessel)
-                        {
-                            __instance.SetVesselTarget(null);
-                        }
-                    }
-                }
             }
         }
     }
