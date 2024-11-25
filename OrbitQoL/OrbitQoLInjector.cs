@@ -1,19 +1,21 @@
 ﻿using System;
 using UnityEngine;
 using System.Reflection;
+using System.Reflection.Emit;
 using HarmonyLib;
 using KSP.UI.Screens.Mapview;
+using System.Collections.Generic;
 
 namespace OrbitQoLInjector
 {
 
-    [KSPAddon(KSPAddon.Startup.Flight, true)]
+    [KSPAddon(KSPAddon.Startup.Instantly, true)]
     public class OrbitQoLInjector : MonoBehaviour
     {
         public void Awake()
         {
             Assembly assembly = Assembly.GetExecutingAssembly();
-            Harmony harmony = new Harmony("CameraInjector");
+            Harmony harmony = new Harmony("OrbitQoLInjector");
             harmony.PatchAll(assembly);
         }
     }
@@ -57,19 +59,42 @@ namespace OrbitQoLInjector
     [HarmonyPatch(typeof(FlightGlobals), "UpdateInformation", new Type[] { typeof(bool) })]
     public static class UpdateInformationOverride
     {
-        static ITargetable target;
-        private static void Prefix(ref FlightGlobals __instance, ref bool fixedUpdate)
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            target = __instance.VesselTarget ?? null;
-        }
+            FieldInfo FlightGlobals_currentMainBody = AccessTools.Field(typeof(FlightGlobals), nameof(FlightGlobals.currentMainBody));
+            MethodInfo FlightGlobals_SetVesselTarget = AccessTools.Method(typeof(FlightGlobals), nameof(FlightGlobals.SetVesselTarget));
 
-        private static void Postfix(ref FlightGlobals __instance, ref bool fixedUpdate)
-        {
-            if (__instance.VesselTarget == null && target != null &&
-                !(target.GetTransform() == null || (!target.GetActiveTargetable() && target.GetVessel() == __instance.activeVessel)))
+            List<CodeInstruction> code = new List<CodeInstruction>(instructions);
+            int numFlightGlobals_currentMainBodysSeen = 0;
+            int numFlightGlobals_SetVesselTargetsSeen = 0;
+            for (int i = 1; i < code.Count; i++)
             {
-                __instance.SetVesselTarget(target);
+                if (code[i].opcode == OpCodes.Br
+                    && code[i - 1].opcode == OpCodes.Call
+                    && ReferenceEquals(code[i - 1].operand, FlightGlobals_SetVesselTarget))
+                {
+                    numFlightGlobals_SetVesselTargetsSeen++;
+                    if (numFlightGlobals_SetVesselTargetsSeen == 2)
+                    {
+                        for (int j = i; j >= 0; j--)
+                        {
+                            if (code[j].opcode == OpCodes.Ldsfld && ReferenceEquals(code[j].operand, FlightGlobals_currentMainBody))
+                            {
+                                numFlightGlobals_currentMainBodysSeen++;
+                            }
+                            OpCode opcode = code[j].opcode;
+                            code[j].opcode = OpCodes.Nop;
+                            code[j].operand = null;
+                            if (numFlightGlobals_currentMainBodysSeen == 2 && opcode == OpCodes.Ldarg_0)
+                            {
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
             }
+            return code;
         }
     }
 }
