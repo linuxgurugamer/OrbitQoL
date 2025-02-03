@@ -3,7 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrbitQoL", "OrbitQoL/OrbitQoL.csproj", "{B5CD2BA8-364D-4E18-8389-30651A821A71}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrbitQoL", "OrbitQoL\OrbitQoL.csproj", "{B5CD2BA8-364D-4E18-8389-30651A821A71}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E9F0D301-660A-4329-A9FA-6112829356FC}"
+	ProjectSection(SolutionItems) = preProject
+		buildRelease.bat = buildRelease.bat
+		deploy.bat = deploy.bat
+		LICENSE = LICENSE
+		OrbitQoL.version = OrbitQoL.version
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
