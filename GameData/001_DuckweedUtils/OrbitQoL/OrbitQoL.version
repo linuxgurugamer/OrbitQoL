@@ -1,7 +1,6 @@
 {
   "NAME": "OrbitQoL",
-  "URL": "https://github.com/jamespglaze/OrbitQoL/releases/latest/download/OrbitQoL.version",
-  "DOWNLOAD": "https://github.com/jamespglaze/OrbitQoL/releases/latest",
+  "URL": "https://raw.githubusercontent.com/linuxgurugamer/OrbitQoL/refs/heads/main/OrbitQoL.version",
   "VERSION":
   {
     "MAJOR": 1,
